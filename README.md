@@ -13,12 +13,24 @@
 
 ## 安装和运行
 
-### 1. 安装依赖
+### 1. 创建虚拟环境（推荐）
+```bash
+# 创建虚拟环境
+python3 -m venv venv
+
+# 激活虚拟环境
+# Windows:
+# venv\Scripts\activate
+# macOS/Linux:
+source venv/bin/activate
+```
+
+### 2. 安装依赖
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. 运行应用
+### 3. 运行应用
 ```bash
 python app.py
 ```
