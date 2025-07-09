@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web 浏览器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .browser-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .browser-title {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .navigation-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-1px);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .address-bar {
+            flex: 1;
+            max-width: 600px;
+            position: relative;
+        }
+
+        .url-input {
+            width: 100%;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        .url-input:focus {
+            outline: none;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+        }
+
+        .go-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .go-btn:hover {
+            background: #45a049;
+            transform: translateY(-1px);
+        }
+
+        .browser-content {
+            flex: 1;
+            background: white;
+            margin: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .browser-tabs {
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tab {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px 8px 0 0;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #495057;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .tab:hover:not(.active) {
+            background: #f8f9fa;
+        }
+
+        .new-tab-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .new-tab-btn:hover {
+            background: #5a6268;
+            transform: scale(1.1);
+        }
+
+        .browser-frame {
+            flex: 1;
+            border: none;
+            width: 100%;
+            background: white;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            display: none;
+            text-align: center;
+            padding: 50px;
+            color: #dc3545;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .quick-links {
+            background: #f8f9fa;
+            padding: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .quick-links h3 {
+            margin-bottom: 10px;
+            color: #495057;
+            font-size: 16px;
+        }
+
+        .quick-links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .quick-link {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: #495057;
+        }
+
+        .quick-link:hover {
+            background: #007bff;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+        }
+
+        @media (max-width: 768px) {
+            .browser-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .navigation-controls {
+                width: 100%;
+            }
+            
+            .address-bar {
+                max-width: none;
+            }
+            
+            .browser-content {
+                margin: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="browser-header">
+        <div class="browser-title">🌐 Web 浏览器</div>
+        
+        <div class="navigation-controls">
+            <button class="nav-btn" id="backBtn" disabled>
+                ← 后退
+            </button>
+            <button class="nav-btn" id="forwardBtn" disabled>
+                前进 →
+            </button>
+            <button class="nav-btn" id="refreshBtn">
+                🔄 刷新
+            </button>
+            
+            <div class="address-bar">
+                <input type="text" class="url-input" id="urlInput" 
+                       placeholder="输入网址，例如: https://www.baidu.com" 
+                       value="https://www.baidu.com">
+            </div>
+            
+            <button class="go-btn" id="goBtn">前往</button>
+        </div>
+    </div>
+
+    <div class="browser-content">
+        <div class="browser-tabs">
+            <div class="tab active" data-tab="main">主页</div>
+            <button class="new-tab-btn" id="newTabBtn">+</button>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>正在加载网页...</p>
+        </div>
+        
+        <div class="error-message" id="errorMessage">
+            <h3>⚠️ 无法访问此网站</h3>
+            <p>请检查网址是否正确，或尝试其他网站。</p>
+        </div>
+        
+        <iframe class="browser-frame" id="browserFrame" 
+                src="about:blank" style="display: none;"></iframe>
+        
+        <div class="quick-links" id="quickLinks">
+            <h3>快速访问</h3>
+            <div class="quick-links-grid">
+                <a href="#" class="quick-link" data-url="https://www.baidu.com">百度</a>
+                <a href="#" class="quick-link" data-url="https://www.google.com">Google</a>
+                <a href="#" class="quick-link" data-url="https://www.bing.com">必应</a>
+                <a href="#" class="quick-link" data-url="https://www.github.com">GitHub</a>
+                <a href="#" class="quick-link" data-url="https://www.stackoverflow.com">Stack Overflow</a>
+                <a href="#" class="quick-link" data-url="https://www.wikipedia.org">维基百科</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class WebBrowser {
+            constructor() {
+                this.currentUrl = '';
+                this.history = [];
+                this.historyIndex = -1;
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.loadUrl('https://www.baidu.com');
+            }
+
+            bindEvents() {
+                // 导航按钮
+                document.getElementById('backBtn').addEventListener('click', () => this.goBack());
+                document.getElementById('forwardBtn').addEventListener('click', () => this.goForward());
+                document.getElementById('refreshBtn').addEventListener('click', () => this.refresh());
+                
+                // 地址栏
+                const urlInput = document.getElementById('urlInput');
+                const goBtn = document.getElementById('goBtn');
+                
+                urlInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.navigate();
+                    }
+                });
+                
+                goBtn.addEventListener('click', () => this.navigate());
+                
+                // 快速链接
+                document.querySelectorAll('.quick-link').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const url = link.dataset.url;
+                        urlInput.value = url;
+                        this.loadUrl(url);
+                    });
+                });
+                
+                // 新标签页
+                document.getElementById('newTabBtn').addEventListener('click', () => {
+                    this.newTab();
+                });
+                
+                // iframe 事件
+                const iframe = document.getElementById('browserFrame');
+                iframe.addEventListener('load', () => {
+                    this.hideLoading();
+                    this.updateNavigationButtons();
+                });
+                
+                iframe.addEventListener('error', () => {
+                    this.showError();
+                });
+            }
+
+            navigate() {
+                const url = document.getElementById('urlInput').value.trim();
+                if (url) {
+                    this.loadUrl(url);
+                }
+            }
+
+            loadUrl(url) {
+                // 确保 URL 有协议
+                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    url = 'https://' + url;
+                }
+
+                this.showLoading();
+                this.hideError();
+                
+                const iframe = document.getElementById('browserFrame');
+                iframe.style.display = 'block';
+                
+                // 添加到历史记录
+                this.addToHistory(url);
+                
+                // 由于跨域限制，我们使用代理或显示提示
+                try {
+                    iframe.src = url;
+                    this.currentUrl = url;
+                    document.getElementById('urlInput').value = url;
+                } catch (error) {
+                    this.showError();
+                }
+            }
+
+            addToHistory(url) {
+                // 移除当前位置之后的历史记录
+                this.history = this.history.slice(0, this.historyIndex + 1);
+                this.history.push(url);
+                this.historyIndex = this.history.length - 1;
+                this.updateNavigationButtons();
+            }
+
+            goBack() {
+                if (this.historyIndex > 0) {
+                    this.historyIndex--;
+                    const url = this.history[this.historyIndex];
+                    this.loadUrl(url);
+                }
+            }
+
+            goForward() {
+                if (this.historyIndex < this.history.length - 1) {
+                    this.historyIndex++;
+                    const url = this.history[this.historyIndex];
+                    this.loadUrl(url);
+                }
+            }
+
+            refresh() {
+                if (this.currentUrl) {
+                    this.loadUrl(this.currentUrl);
+                }
+            }
+
+            newTab() {
+                // 创建新标签页的逻辑
+                const tabsContainer = document.querySelector('.browser-tabs');
+                const newTab = document.createElement('div');
+                newTab.className = 'tab';
+                newTab.textContent = '新标签页';
+                newTab.dataset.tab = 'tab-' + Date.now();
+                
+                // 插入到新标签按钮之前
+                const newTabBtn = document.getElementById('newTabBtn');
+                tabsContainer.insertBefore(newTab, newTabBtn);
+                
+                // 激活新标签页
+                this.activateTab(newTab);
+            }
+
+            activateTab(tab) {
+                // 移除所有活动状态
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                // 激活当前标签页
+                tab.classList.add('active');
+            }
+
+            updateNavigationButtons() {
+                const backBtn = document.getElementById('backBtn');
+                const forwardBtn = document.getElementById('forwardBtn');
+                
+                backBtn.disabled = this.historyIndex <= 0;
+                forwardBtn.disabled = this.historyIndex >= this.history.length - 1;
+            }
+
+            showLoading() {
+                document.getElementById('loading').classList.add('show');
+                document.getElementById('browserFrame').style.display = 'none';
+                document.getElementById('errorMessage').classList.remove('show');
+            }
+
+            hideLoading() {
+                document.getElementById('loading').classList.remove('show');
+                document.getElementById('browserFrame').style.display = 'block';
+            }
+
+            showError() {
+                this.hideLoading();
+                document.getElementById('errorMessage').classList.add('show');
+            }
+
+            hideError() {
+                document.getElementById('errorMessage').classList.remove('show');
+            }
+        }
+
+        // 初始化浏览器
+        const browser = new WebBrowser();
+
+        // 标签页切换
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('tab')) {
+                document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+                e.target.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html> 
