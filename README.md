@@ -36,7 +36,7 @@ python app.py
 ```
 
 ### 3. 访问浏览器
-打开浏览器访问: `http://localhost:5000`
+打开浏览器访问: `http://localhost:5060`
 
 ## 使用说明
 
